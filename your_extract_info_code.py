@@ -4,56 +4,19 @@ from openpyxl import Workbook
 import PyPDF2
 from docx import Document
 import comtypes.client
+import win32com.client
 
-def extract_info(text):
-    """Extracts email IDs, contact numbers, and overall text from CV text."""
-    email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
-    phone_regex = r"\d{3}-\d{3}-\d{4}|\d{10}"
-    email = re.search(email_regex, text)
-    phone_number = re.search(phone_regex, text)
-    return {
-        "email": email.group() if email else "", 
-        "phone_number": phone_number.group() if phone_number else "",
-        "text": text
-    }
-
-def extract_text_from_pdf(pdf_file):
-    """Extracts text from a PDF file."""
+def extract_text_from_doc(doc_file):
+    """Extracts text from a DOC file using pywin32."""
     try:
-        with open(pdf_file, 'rb') as pdf:
-            pdf_reader = PyPDF2.PdfReader(pdf)
-            text = ""
-            for page_num in range(len(pdf_reader.pages)):
-                text += pdf_reader.pages[page_num].extract_text()
-            return text
-    except Exception as e:
-        print(f"Error processing PDF {pdf_file}: {e}")
-        return ""
-
-def extract_text_from_docx(docx_file):
-    """Extracts text from a DOCX file."""
-    try:
-        doc = Document(docx_file)
-        text = ""
-        for paragraph in doc.paragraphs:
-            text += paragraph.text
-        return text
-    except Exception as e:
-        print(f"Error processing DOCX {docx_file}: {e}")
-        return ""
-
-def convert_doc_to_docx(doc_file):
-    """Converts DOC file to DOCX format."""
-    try:
-        docx_file = f"{doc_file}.docx"
-        word = comtypes.client.CreateObject("Word.Application")
+        word = win32com.client.Dispatch("Word.Application")
         doc = word.Documents.Open(doc_file)
-        doc.SaveAs(docx_file, FileFormat=16)
+        text = doc.Content.Text
         doc.Close()
         word.Quit()
-        return docx_file
+        return text
     except Exception as e:
-        print(f"Error converting DOC to DOCX: {e}")
+        print(f"Error processing DOC {doc_file}: {e}")
         return ""
 
 def process_cvs(cv_folder, output_filename):
@@ -69,12 +32,7 @@ def process_cvs(cv_folder, output_filename):
             elif filename.endswith(".docx"):
                 text = extract_text_from_docx(os.path.join(root, filename))
             elif filename.endswith(".doc"):
-                docx_file = convert_doc_to_docx(os.path.join(root, filename))
-                if docx_file:
-                    text = extract_text_from_docx(docx_file)
-                    os.remove(docx_file)  # Remove temporary DOCX file
-                else:
-                    continue
+                text = extract_text_from_doc(os.path.join(root, filename))
             else:
                 print(f"Skipping unsupported file: {filename}")
                 continue

@@ -3,7 +3,7 @@ import re
 from openpyxl import Workbook
 import PyPDF2
 from docx import Document
-import comtypes.client
+#import comtypes.client
 import win32com.client
 
 def extract_text_from_doc(doc_file):

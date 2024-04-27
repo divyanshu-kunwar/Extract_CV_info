@@ -7,6 +7,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = 'super_secret_key'
 
 def extract_zip(file_path, extract_dir):
     """Extracts the contents of a ZIP file to a directory."""
@@ -44,7 +45,5 @@ def upload_file():
 def download_file(filename):
     return send_file(filename, as_attachment=True)
 
-if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
-    app.run(debug=True, host='0.0.0.0', port=8080)
-
+# if __name__ == '__main__':
+#     app.run(debug=True, host='0.0.0.0', port=8080)
